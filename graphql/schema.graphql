@@ -1,0 +1,89 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"Indicates what fields are available at the top level of a query operation."
+type Query {
+    me: User @auth
+    user(id: ID @eq): User @find @guard
+    users: [User!]! @paginate(defaultCount: 10) @guard
+
+    calendar(id: ID @eq): Calendar @find
+    calendars: [Calendar!]! @paginate(defaultCount: 10) @guard
+
+    lesson(id: ID @eq): Lesson @find @guard
+    lessons: [Lesson!]! @paginate(defaultCount: 10) @guard
+}
+
+"Account of a person who utilizes this application."
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    email_verified_at: DateTime
+    created_at: DateTime!
+    updated_at: DateTime!
+    calendar: [Calendar!]! @hasMany
+}
+
+type Calendar {
+    id: ID!
+    name_calendar: String!
+    description_calendar: String
+    user: User! @belongsTo
+    created_at: DateTime!
+    updated_at: DateTime!
+    lesson: [Lesson!]! @hasMany
+}
+
+type Lesson {
+    id: ID!
+    name_lesson: String!
+    description_lesson: String
+    calendar: Calendar! @belongsTo
+    date_start_lesson: DateTime!
+    date_end_lesson: DateTime!
+    duration_lesson: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Mutation {
+
+    "Calendar Mutation"
+    createCalendar(
+        name_calendar: String!,
+        description_calendar: String,
+        user_id: String!
+    ): Calendar @validator(class: "CreateCalendarInputValidator") @field(resolver: "CreateCalendarMutator") @guard
+
+    updateCalendar(
+        id:ID!,
+        name_calendar: String!,
+        description_calendar: String,
+        user_id: String
+    ): Calendar @validator(class: "UpdateCalendarInputValidator") @field(resolver: "UpdateCalendarMutator") @guard
+
+    deleteCalendar(id:ID!): Calendar @field(resolver: "DeleteCalendarMutator") @guard
+
+    "Lesson Mutation"
+    createLesson(
+        name_lesson: String!,
+        description_lesson: String,
+        calendar_id: String!,
+        date_start_lesson: DateTime!,
+        date_end_lesson: DateTime!,
+        duration_lesson: String!
+    ): Lesson @validator(class: "CreateLessonInputValidator") @field(resolver: "CreateLessonMutator") @guard
+
+    updateLesson(
+        id: ID!,
+        name_lesson: String!,
+        description_lesson: String,
+        calendar_id: String!,
+        date_start_lesson: DateTime!,
+        date_end_lesson: DateTime!,
+        duration_lesson: String!
+    ): Lesson @validator(class: "UpdateLessonClassInputValidator") @field(resolver: "UpdateLessonMutator") @guard
+
+    deleteLesson(id:ID!): Lesson @field(resolver: "DeleteLessonMutator") @guard
+}
